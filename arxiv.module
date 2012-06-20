@@ -10,12 +10,8 @@ function arxiv_field_info() {
 			'default_formatter' => 'arxiv_default',
 			'settings' => array (
 				'max_length' => 9
-			),
-
-			
-		),
-
-		
+			),			
+		),		
 	);
 }
 
@@ -196,8 +192,16 @@ function arxiv_field_formatter_info() {
 
 			
 		),
-		'arxiv_plain' => array (
-			'label' => t('Plain text'),
+		'arxiv_download' => array (
+			'label' => t('Plain text with download link only'),
+			'field types' => array (
+				'arxiv'
+			),
+
+			
+		),
+		'arxiv_abstract' => array (
+			'label' => t('Plain text with abstract info only'),
 			'field types' => array (
 				'arxiv'
 			),
@@ -211,21 +215,29 @@ function arxiv_field_formatter_info() {
 
 function arxiv_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
 	$element = array ();
-
+	$statistics = statistics_get($entity->nid);
+	$obj = db_select('arxiv_downNo', 'm')->fields('m', array ('downloadNo'))
+  	       ->condition('m.nid', $entity->nid)->execute()->fetchAll();
+   if($obj){
+   	 $info = ' ('.$statistics['totalcount'].' views, '.$obj[0]->downloadNo.' download, '.$entity->comment_count.' comments)';
+   }else{
+   	 $info = ' ('.$statistics['totalcount'].' views, 0 download, '.$entity->comment_count.' comments)';
+   }
+  
 	switch ($display['type']) {
 		case 'arxiv_default' :
 			foreach ($items as $delta => $item) {
-				$output = '<div class="arxiv"><p>' . $item['authors'] . '</p><p>' . $item['abstract'] . '</p><p>';
+				$output = '<div class="arxiv"><p>' . $item['abstract'] . '</p><p>';
 				if ($item['pdfUrl'] != '') {
-					$output .= '<a href=' . $item['pdfUrl'] . '>pdf </a>';
+					$output .= '<a href="/paper/download/'.$entity->nid.'/pdf" >pdf </a>';
 				}
 				if ($item['psUrl'] != '') {
-					$output .= '<a href=' . $item['psUrl'] . '>ps </a>';
+					$output .= '<a href="/paper/download/'.$entity->nid.'/ps" >ps </a>';
 				}
 				if ($item['otherUrl'] != '') {
-					$output .= '<a href=' . $item['otherUrl'] . '>other </a>';
+					$output .= '<a href="/paper/download/'.$entity->nid.'/other" >other </a>';
 				}
-				$output .= '</p></div>';
+				$output .= $info.'</p></div>';
 				$element[$delta] = array (
 					'#markup' => $output
 				);
@@ -233,23 +245,33 @@ function arxiv_field_formatter_view($entity_type, $entity, $field, $instance, $l
 
 			break;
 
-		case 'arxiv_plain' :
+		case 'arxiv_download' :
 			foreach ($items as $delta => $item) {
-				$output = '<div class="arxiv"><p>' . $item['authors'] . '</p><p>';
+				$output = '<div class="arxiv"><p>';
 				if ($item['pdfUrl'] != '') {
-					$output .= '<a href=' . $item['pdfUrl'] . '>pdf </a>';
+					$output .= '<a href="/paper/download/'.$entity->nid.'/pdf" >pdf </a>';
 				}
 				if ($item['psUrl'] != '') {
-					$output .= '<a href=' . $item['psUrl'] . '>ps </a>';
+					$output .= '<a href="/paper/download/'.$entity->nid.'/ps" >ps </a>';
 				}
 				if ($item['otherUrl'] != '') {
-					$output .= '<a href=' . $item['otherUrl'] . '>other </a>';
+					$output .= '<a href="/paper/download/'.$entity->nid.'/other" >other </a>';
 				}
-				$output .= '</p></div>';
+				$output .= $info.'</p></div>';
 				$element[$delta] = array (
 					'#markup' => $output
 				);
 			}
+			break;
+			
+		case 'arxiv_abstract' :
+			foreach ($items as $delta => $item) {
+				$output = '<div class="arxiv"><p>' . $item['abstract'] . '</p></div>';
+				$element[$delta] = array (
+					'#markup' => $output
+				);
+			}
+
 			break;
 	}
 
@@ -332,7 +354,7 @@ function arxiv_get_paper($serialNo) {
 }
 
 function arxiv_form_node_form_alter(&$form, &$form_state, $form_id) {
- foreach($form_state['field'] as $type=>$name){
+ foreach($form_state['field'] as $type=>$name){ 	
  	if($form_state['field'][$type]['und']['instance']['widget']['module']=='arxiv'){
  		$form['title']['#value'] = 'ant';
     $form['title']['#type'] = 'value';
@@ -341,4 +363,61 @@ function arxiv_form_node_form_alter(&$form, &$form_state, $form_id) {
  	}
  }   
 
+}
+
+/**
+ * Implementation of hook_menu().
+	 */
+function arxiv_menu() {
+    $items['paper/download/%/%'] = array(
+     //   'page callback' => 'postform_overlay',
+     'title'=>'Download the paper',
+     'page callback' => 'paper_download',
+     'page arguments' => array(2,3),
+      'access callback' => TRUE,
+      'type' => MENU_CALLBACK
+    );
+	    return $items;
+}
+
+function paper_download($nid,$type){
+	$node = node_load($nid);
+    $langcode = $GLOBALS['language_content']->language;
+  	node_build_content($node, 'full', $langcode);
+  	list(, , $bundle) = entity_extract_ids('node', $node);
+  	//increase download number
+  	$obj = db_select('arxiv_downNo', 'm')->fields('m', array ('downloadNo'))
+  	       ->condition('m.nid', $node->nid)->execute()->fetchAll();
+  	if($obj){
+  		db_update('arxiv_downNo')->fields(array ('downloadNo'=>$obj[0]->downloadNo+1))
+  	       ->condition('nid', $node->nid)->execute();
+  	}else{
+  		db_insert('arxiv_downNo')->fields(array ('nid'=>$node->nid,'downloadNo'=>1))->execute();
+  	}
+  	
+  	//download
+  	foreach (field_info_instances('node', $bundle) as $instance) {
+    	if($instance['widget']['module']=='arxiv'){
+    		if ($node->{$instance['field_name']}['und'][0]['pdfUrl'] != ''&& $type=='pdf') {
+    				$url=$node->{$instance['field_name']}['und'][0]['pdfUrl'];
+    				header( "Location: $url" );
+				//	return $node->{$instance['field_name']}['und'][0]['pdfUrl'];
+				}
+				if ($node->{$instance['field_name']}['und'][0]['psUrl'] != ''&&$type=='ps') {
+					$url=$node->{$instance['field_name']}['und'][0]['psUrl'];
+    				header( "Location: $url" );
+					//return $node->{$instance['field_name']}['und'][0]['psUrl'];
+				}
+				if ($node->{$instance['field_name']}['und'][0]['otherUrl'] != ''&&$type=='other') {
+					$url=$node->{$instance['field_name']}['und'][0]['otherUrl'];
+    				header( "Location: $url" );
+				}
+    	}else if($instance['field_name']=='field_upload'){
+    		if ($node->{$instance['field_name']}['und'][0]['filename'] != '') {
+    				$url = file_create_url($node->{$instance['field_name']}['und'][0]['uri']);
+					header( "Location: $url" );
+				}
+    	}
+  }
+	
 }
