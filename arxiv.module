@@ -85,7 +85,7 @@ function _arxiv_field_validate($element, & $form_state) {
 			))->condition('m.' .
 			$field_name . '_serialNo', $item['text_field_wrapper']['arxivinfo'])->condition('m.deleted', 0)->execute()->fetchAll();
 			if ($obj)
-				form_set_error($field_name, t('The paper you submitted already exists. Click <a href="/' . $obj[0]->entity_type . '/' . $obj[0]->entity_id . '">here</a> to view it.'));
+				form_set_error($field_name, t('The paper you submitted already exists. Click <a href="'.url('/' . $obj[0]->entity_type . '/' . $obj[0]->entity_id) . '">here</a> to view it.'));
 			else {
 				include_once (ARXIV_PATH . '/parser/BrowserEmulator.php');
 				$html = BrowserEmulator :: openArxiv($item['text_field_wrapper']['arxivinfo']);
@@ -229,13 +229,13 @@ function arxiv_field_formatter_view($entity_type, $entity, $field, $instance, $l
 			foreach ($items as $delta => $item) {
 				$output = '<div class="arxiv"><p>' . $item['abstract'] . '</p><p>';
 				if ($item['pdfUrl'] != '') {
-					$output .= '<a href="/paper/download/'.$entity->nid.'/pdf" >pdf </a>';
+					$output .= '<a href="'.url('/paper/download/'.$entity->nid.'/pdf').'" >pdf </a>';
 				}
 				if ($item['psUrl'] != '') {
-					$output .= '<a href="/paper/download/'.$entity->nid.'/ps" >ps </a>';
+					$output .= '<a href="'.url('/paper/download/'.$entity->nid.'/ps').'" >ps </a>';
 				}
 				if ($item['otherUrl'] != '') {
-					$output .= '<a href="/paper/download/'.$entity->nid.'/other" >other </a>';
+					$output .= '<a href="'.url('/paper/download/'.$entity->nid.'/other').'">other </a>';
 				}
 				$output .= $info.'</p></div>';
 				$element[$delta] = array (
@@ -249,13 +249,13 @@ function arxiv_field_formatter_view($entity_type, $entity, $field, $instance, $l
 			foreach ($items as $delta => $item) {
 				$output = '<div class="arxiv"><p>';
 				if ($item['pdfUrl'] != '') {
-					$output .= '<a href="/paper/download/'.$entity->nid.'/pdf" >pdf </a>';
+					$output .= '<a href="'.url('/paper/download/'.$entity->nid.'/pdf').'">pdf </a>';
 				}
 				if ($item['psUrl'] != '') {
-					$output .= '<a href="/paper/download/'.$entity->nid.'/ps" >ps </a>';
+					$output .= '<a href="'.url('/paper/download/'.$entity->nid.'/ps').'">ps </a>';
 				}
 				if ($item['otherUrl'] != '') {
-					$output .= '<a href="/paper/download/'.$entity->nid.'/other" >other </a>';
+					$output .= '<a href="'.url('/paper/download/'.$entity->nid.'/other').'">other </a>';
 				}
 				$output .= $info.'</p></div>';
 				$element[$delta] = array (
