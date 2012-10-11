@@ -95,7 +95,7 @@ function _arxiv_field_validate($element, & $form_state) {
 				}
 
 				// serial id doesn't exist
-				if ($html == '' || strpos($html, "Paper identifier " . $item['text_field_wrapper']['arxivinfo'] . " not recognized") !== false || strpos($html, "Paper " . $item['text_field_wrapper']['arxivinfo'] . " doesn't exist") !== false) {
+				if ($html == '' || strpos($html, "Paper  " . $item['text_field_wrapper']['arxivinfo'] . " not recognized") !== false || strpos($html, "Paper " . $item['text_field_wrapper']['arxivinfo'] . " doesn't exist") !== false) {
 					form_set_error($field_name, t('The paper you submitted does not exist.'));
 					return;
 				}
@@ -220,8 +220,10 @@ function arxiv_field_formatter_view($entity_type, $entity, $field, $instance, $l
   	       ->condition('m.nid', $entity->nid)->execute()->fetchAll();
    if($obj){
    	 $info = ' ('.$statistics['totalcount'].' views, '.$obj[0]->downloadNo.' download, '.$entity->comment_count.' comments)';
-   }else{
+   }elseif(isset($entity->comment_count)){
    	 $info = ' ('.$statistics['totalcount'].' views, 0 download, '.$entity->comment_count.' comments)';
+   }else{
+   	 $info = ' ';
    }
   
 	switch ($display['type']) {
@@ -327,7 +329,6 @@ function arxiv_get_paper($serialNo) {
 
 	// 4) abstract
 	$abstracts = $dom->find('.abstract');
-
 	foreach ($abstracts[0]->find('a') as $a) {
 		$a->outertext = $a->innertext;
 	}
@@ -356,9 +357,9 @@ function arxiv_get_paper($serialNo) {
 function arxiv_form_node_form_alter(&$form, &$form_state, $form_id) {
  foreach($form_state['field'] as $type=>$name){ 	
  	if($form_state['field'][$type]['und']['instance']['widget']['module']=='arxiv'){
- 		$form['title']['#value'] = 'ant';
-    $form['title']['#type'] = 'value';
-    $form['title']['#required'] = FALSE;
+ 		$form['title']['#value'] = $form_state['build_info']['args'][0]->field_serial_no['und'][0]['title'];
+    	$form['title']['#type'] = 'value';
+    	$form['title']['#required'] = FALSE;
     break;
  	}
  }   
