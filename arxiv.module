@@ -300,6 +300,7 @@ function arxiv_get_paper($serialNo) {
 	$dom = str_get_html($html);
 	$fulltext = $dom->find('.full-text');
 	$lis = $fulltext[0]->find('li');
+	$item['otherUrl']='';$item['psUrl']='';$item['pdfUrl'] ='';
 	foreach ($lis as $li) {
 		if (strpos($li, 'PDF') !== false) {
 			$item['pdfUrl'] = 'http://arxiv.org' . $li->children[0]->attr['href'];
@@ -308,7 +309,7 @@ function arxiv_get_paper($serialNo) {
 			$item['psUrl'] = 'http://arxiv.org' . $li->children[0]->attr['href'];
 		}
 		if (strpos($li, 'Other') !== false) {
-			$item['psUrl'] = 'http://arxiv.org' . $li->children[0]->attr['href'];
+			$item['OtherUrl'] = 'http://arxiv.org' . $li->children[0]->attr['href'];
 		}
 	}
 
@@ -357,7 +358,11 @@ function arxiv_get_paper($serialNo) {
 function arxiv_form_node_form_alter(&$form, &$form_state, $form_id) {
  foreach($form_state['field'] as $type=>$name){ 	
  	if($form_state['field'][$type]['und']['instance']['widget']['module']=='arxiv'){
- 		$form['title']['#value'] = $form_state['build_info']['args'][0]->field_serial_no['und'][0]['title'];
+ 		if(isset($form_state['build_info']['args'][0]->field_serial_no)){
+ 			$form['title']['#value'] = $form_state['build_info']['args'][0]->field_serial_no['und'][0]['title'];
+ 		}else{
+ 			$form['title']['#value']='null';
+ 		}		
     	$form['title']['#type'] = 'value';
     	$form['title']['#required'] = FALSE;
     break;
