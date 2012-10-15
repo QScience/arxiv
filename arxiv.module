@@ -95,7 +95,7 @@ function _arxiv_field_validate($element, & $form_state) {
 				}
 
 				// serial id doesn't exist
-				if ($html == '' || strpos($html, "Paper  " . $item['text_field_wrapper']['arxivinfo'] . " not recognized") !== false || strpos($html, "Paper " . $item['text_field_wrapper']['arxivinfo'] . " doesn't exist") !== false) {
+				if ($html == '' || strpos($html, "Paper identifier '" . $item['text_field_wrapper']['arxivinfo'] . "' not recognized") !== false ||strpos($html, "Paper " . $item['text_field_wrapper']['arxivinfo'] . " not recognized") !== false || strpos($html, "Paper " . $item['text_field_wrapper']['arxivinfo'] . " doesn't exist") !== false) {
 					form_set_error($field_name, t('The paper you submitted does not exist.'));
 					return;
 				}
