@@ -108,8 +108,39 @@ class BrowserEmulator {
 
 		fclose($file);
 
-		return $html;
+		return $be->http_chunked_decode($html);
 	}
+	/**
+ * @param string $data
+ * @return string
+ */
+ function http_chunked_decode($chunk) { 
+        $pos = 0; 
+        $len = strlen($chunk); 
+        $dechunk = null; 
+
+        while(($pos < $len) 
+            && ($chunkLenHex = substr($chunk,$pos, ($newlineAt = strpos($chunk,"\n",$pos+1))-$pos))) 
+        { 
+            if (! $this->is_hex($chunkLenHex)) { 
+                trigger_error('Value is not properly chunk encoded', E_USER_WARNING); 
+                return $chunk; 
+            } 
+
+            $pos = $newlineAt + 1; 
+            $chunkLen = hexdec(rtrim($chunkLenHex,"\r\n")); 
+            $dechunk .= substr($chunk, $pos, $chunkLen); 
+            $pos = strpos($chunk, "\n", $pos + $chunkLen) + 1; 
+        } 
+        return $dechunk; 
+    } 
+    function is_hex($hex) { 
+        // regex is for weenies 
+        $hex = strtolower(trim(ltrim($hex,"0"))); 
+        if (empty($hex)) { $hex = 0; }; 
+        $dec = hexdec($hex); 
+        return ($hex == dechex($dec)); 
+    } 
 
 	/**
 	 * Make an fopen call to $url with the parameters set by previous member
