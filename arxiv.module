@@ -396,7 +396,8 @@ function paper_download($nid,$type){
 	$node = node_load($nid);
 	if (empty($node)) {
 		global $base_url;
-		drupal_set_message("Paper not found, are you maybe in PREVIEW mode?", 'error');
+		$text = t("Paper not found, are you maybe in PREVIEW mode?");
+		drupal_set_message($text,"warning");
 		drupal_goto($base_url);
 	}
 	$langcode = $GLOBALS['language_content']->language;
