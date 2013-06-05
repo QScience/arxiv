@@ -20,13 +20,13 @@ function arxiv_schema() {
         'not null' => TRUE,
         'description' => 'node ID.',
      ),
-     'downloadNo' => array (
-					'type' => 'int',
-					'unsigned' => TRUE,
-					'not null' => TRUE,
-					'default' => 0,
-					'description' => 'download number'
-				),
+  'downloadNo' => array(
+  'type' => 'int',
+  'unsigned' => TRUE,
+  'not null' => TRUE,
+  'default' => 0,
+  'description' => 'download number'
+  ),
     ),
     'primary key' => array('nid'),
     'indexes' => array(
