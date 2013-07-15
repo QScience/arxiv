@@ -1101,4 +1101,3 @@ class HtmlDom {
 		$this->load ( call_user_func_array ( 'file_get_contents', $args ), true );
 	}
 }
-?>

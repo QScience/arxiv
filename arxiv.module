@@ -1,4 +1,4 @@
- <?php
+<?php
 define('ARXIV_PATH', drupal_get_path('module', 'arxiv')); function arxiv_field_info() {
   return array('arxiv' => array(
     'label' => t('Arxiv'),
