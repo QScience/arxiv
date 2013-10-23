@@ -1,5 +1,5 @@
-; $Id: arxiv.info,v 1.0 $
-name = QScience
+name = Arxiv
 description =  Get paper from arxiv.org.
 core = 7.x
+project = QScience
 dependencies[] = statistics
